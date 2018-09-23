@@ -1,12 +1,16 @@
-#!/bin/sh /etc/rc.common
-START=99
+#!/bin/sh
+[Unit]
+Description=Tests systemd to daemonize a Go binary
+Wants=network.target
+After=network.target
 
-USE_PROCD=1
-BIN="sh /root/go/start-robot-arm.sh"
+[Service]
+Type=simple
+User=root
+DynamicUser=yes
+ExecStart=/home/pi/go/start-robot-arm.sh
+Restart=always
+RestartSec=3
 
-start_service() {
-        procd_open_instance
-        procd_set_param command $BIN
-        procd_set_param respawn
-        procd_close_instance
-}
+[Install]
+WantedBy=multi-user.target

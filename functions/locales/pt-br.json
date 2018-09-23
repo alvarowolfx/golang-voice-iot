@@ -1,0 +1,12 @@
+{
+    "FALLBACK": "Desculpe, não compreendi o que você falou, você pode dizer novamente ?",
+    "WELCOME": "Olá, aqui está o seu braço robótico ao seu dispor.",
+    "ERROR": "Hummm, alguma coisa estranha aconteceu.",
+
+    "ANGLE_ERROR": "Você deve informar um angulo entre 0 e 180 graus",
+    "ARM.MOVE": "Ok, movendo {finalAngle} no {degree}.",
+    "ARM.SET": "Ok, movendo {servo} para {finalAngle} graus.",
+
+    "GRIP.OPEN": "Abrindo garra...",
+    "GRIP.CLOSE": "Fechando garra..."
+}

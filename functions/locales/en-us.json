@@ -1,0 +1,12 @@
+{
+    "FALLBACK": "Can you send the command again ?",
+    "WELCOME": "Hi, here is your robot arm at your service.",
+    "ERROR": "Hummm, something went wrong.",
+
+    "ANGLE_ERROR": "You must informe a angle between 0 and 180",
+    "ARM.MOVE": "Ok, moving {finalAngle} on {degree}.",
+    "ARM.SET": "Ok, moving {servo} to {finalAngle}.",
+
+    "GRIP.OPEN": "Opening the grip...",
+    "GRIP.CLOSE": "Closing the grip..."
+}
