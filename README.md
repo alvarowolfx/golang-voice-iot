@@ -2,6 +2,13 @@
 
 Demo project on how to run a Golang program on an embbeded hardware like Raspberry/Orange Pi. In this case this project works as a controller for a MeArm robot arm that can be controlled by voice using Google Assistant.
 
+## BOM - Bill of Materials
+
+* OrangePi Zero 
+* MeArm - Project can be downloaded [here](https://www.thingiverse.com/thing:993759)
+* 4 Mini Servo motors
+* PCA9685 16 Channel PWM module
+
 ## Schematic 
 
 Work in Progress
