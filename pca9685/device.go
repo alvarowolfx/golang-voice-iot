@@ -4,39 +4,45 @@ import (
 	"math"
 	"time"
 
+	"periph.io/x/periph/conn/physic"
+
 	"periph.io/x/periph/conn/i2c"
 )
 
-const (
-	PCA9685_ADDRESS uint16 = 0x40
+// PCA9685Address i2c default address
+const PCA9685Address uint16 = 0x40
 
-	MODE1         byte = 0x00
-	MODE2         byte = 0x01
-	SUBADR1       byte = 0x02 // NOSONAR
-	SUBADR2       byte = 0x03 // NOSONAR
-	SUBADR3       byte = 0x04 // NOSONAR
-	PRESCALE      byte = 0xFE
-	LED0_ON_L     byte = 0x06
-	LED0_ON_H     byte = 0x07
-	LED0_OFF_L    byte = 0x08
-	LED0_OFF_H    byte = 0x09
-	ALL_LED_ON_L  byte = 0xFA
-	ALL_LED_ON_H  byte = 0xFB
-	ALL_LED_OFF_L byte = 0xFC
-	ALL_LED_OFF_H byte = 0xFD
+// PCA9685 Commands
+const (
+	Mode1      byte = 0x00
+	Mode2      byte = 0x01
+	SubAdr1    byte = 0x02
+	SubAdr2    byte = 0x03
+	SubAdr3    byte = 0x04
+	Prescale   byte = 0xFE
+	Led0OnL    byte = 0x06
+	Led0OnH    byte = 0x07
+	Led0OffL   byte = 0x08
+	Led0OffH   byte = 0x09
+	AllLedOnL  byte = 0xFA
+	AllLedOnH  byte = 0xFB
+	AllLedOffL byte = 0xFC
+	AllLedOffH byte = 0xFD
 
 	// Bits
-	RESTART byte = 0x80 // NOSONAR
-	SLEEP   byte = 0x10
-	ALLCALL byte = 0x01
-	INVRT   byte = 0x10 // NOSONAR
-	OUTDRV  byte = 0x04
+	Restart byte = 0x80
+	Sleep   byte = 0x10
+	AllCall byte = 0x01
+	Invrt   byte = 0x10
+	OutDrv  byte = 0x04
 )
 
+// Dev is a handler to pca9685 controller
 type Dev struct {
 	dev *i2c.Dev
 }
 
+// NewI2CAddress returns a Dev object that communicates over I2C on a alternate address
 func NewI2CAddress(bus i2c.Bus, address uint16) (*Dev, error) {
 	dev := &Dev{
 		dev: &i2c.Dev{Bus: bus, Addr: address},
@@ -45,26 +51,27 @@ func NewI2CAddress(bus i2c.Bus, address uint16) (*Dev, error) {
 	return dev, err
 }
 
+// NewI2C returns a Dev object that communicates over I2C on the default address
 func NewI2C(bus i2c.Bus) (*Dev, error) {
-	return NewI2CAddress(bus, PCA9685_ADDRESS)
+	return NewI2CAddress(bus, PCA9685Address)
 }
 
 func (d *Dev) init() error {
 	d.SetAllPwm(0, 0)
-	d.dev.Write([]byte{MODE2, OUTDRV})
-	d.dev.Write([]byte{MODE1, ALLCALL})
+	d.dev.Write([]byte{Mode2, OutDrv})
+	d.dev.Write([]byte{Mode1, AllCall})
 
 	time.Sleep(100 * time.Millisecond)
 
 	var mode1 byte
-	err := d.dev.Tx([]byte{MODE1}, []byte{mode1})
+	err := d.dev.Tx([]byte{Mode1}, []byte{mode1})
 
 	if err != nil {
 		return err
 	}
 
-	mode1 = mode1 & ^SLEEP
-	d.dev.Write([]byte{MODE1, mode1 & 0xFF})
+	mode1 = mode1 & ^Sleep
+	d.dev.Write([]byte{Mode1, mode1 & 0xFF})
 
 	time.Sleep(5 * time.Millisecond)
 
@@ -72,42 +79,45 @@ func (d *Dev) init() error {
 	return err
 }
 
+// SetPwmFreq set the pwm frequency
 func (d *Dev) SetPwmFreq(freqHz float32) error {
-	var prescaleval float32 = 25000000.0 //# 25MHz
-	prescaleval /= 4096.0                //# 12-bit
-	prescaleval /= freqHz
+	prescaleval := float32(25 * physic.MegaHertz)
+	prescaleval /= 4096.0 //# 12-bit
+	prescaleval /= (freqHz * float32(physic.Hertz))
 	prescaleval -= 1.0
 
 	prescale := int(math.Floor(float64(prescaleval + 0.5)))
 
 	var oldmode byte
-	err := d.dev.Tx([]byte{MODE1}, []byte{oldmode})
+	err := d.dev.Tx([]byte{Mode1}, []byte{oldmode})
 
 	if err != nil {
 		return err
 	}
 
 	newmode := (byte)((oldmode & 0x7F) | 0x10) // sleep
-	d.dev.Write([]byte{MODE1, newmode})        // go to sleep
-	d.dev.Write([]byte{PRESCALE, byte(prescale)})
-	d.dev.Write([]byte{MODE1, oldmode})
+	d.dev.Write([]byte{Mode1, newmode})        // go to sleep
+	d.dev.Write([]byte{Prescale, byte(prescale)})
+	d.dev.Write([]byte{Mode1, oldmode})
 
 	time.Sleep(100 * time.Millisecond)
 
-	d.dev.Write([]byte{MODE1, (byte)(oldmode | 0x80)})
+	d.dev.Write([]byte{Mode1, (byte)(oldmode | 0x80)})
 	return nil
 }
 
+// SetAllPwm set a pwm value for all outputs
 func (d *Dev) SetAllPwm(on uint16, off uint16) {
-	d.dev.Write([]byte{ALL_LED_ON_L, byte(on) & 0xFF})
-	d.dev.Write([]byte{ALL_LED_ON_H, byte(on >> 8)})
-	d.dev.Write([]byte{ALL_LED_OFF_L, byte(off) & 0xFF})
-	d.dev.Write([]byte{ALL_LED_OFF_H, byte(off >> 8)})
+	d.dev.Write([]byte{AllLedOnL, byte(on) & 0xFF})
+	d.dev.Write([]byte{AllLedOnH, byte(on >> 8)})
+	d.dev.Write([]byte{AllLedOffL, byte(off) & 0xFF})
+	d.dev.Write([]byte{AllLedOffH, byte(off >> 8)})
 }
 
+// SetPwm set a pwm value for given pca9685 channel
 func (d *Dev) SetPwm(channel int, on uint16, off uint16) {
-	d.dev.Write([]byte{LED0_ON_L + byte(4*channel), byte(on) & 0xFF})
-	d.dev.Write([]byte{LED0_ON_H + byte(4*channel), byte(on >> 8)})
-	d.dev.Write([]byte{LED0_OFF_L + byte(4*channel), byte(off) & 0xFF})
-	d.dev.Write([]byte{LED0_OFF_H + byte(4*channel), byte(off >> 8)})
+	d.dev.Write([]byte{Led0OnL + byte(4*channel), byte(on) & 0xFF})
+	d.dev.Write([]byte{Led0OnH + byte(4*channel), byte(on >> 8)})
+	d.dev.Write([]byte{Led0OffL + byte(4*channel), byte(off) & 0xFF})
+	d.dev.Write([]byte{Led0OffH + byte(4*channel), byte(off >> 8)})
 }
