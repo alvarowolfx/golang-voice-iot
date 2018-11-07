@@ -4,7 +4,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/alvarowolfx/golang-voice-iot/pca9685"
+	"periph.io/x/periph/conn/physic"
+	"periph.io/x/periph/experimental/devices/pca9685"
 )
 
 const (
@@ -63,7 +64,7 @@ func (ra *RobotArm) updateServo(s *pca9685.Servo, oldValue, newValue int) {
 	go func() {
 		for pos := 0; pos < duration; pos++ {
 			angle := easeInOutSine(float64(pos), float64(oldValue), float64(diff), float64(duration))
-			intAngle := int(math.Ceil(angle))
+			intAngle := physic.Angle(math.Ceil(angle))
 			s.SetAngle(intAngle)
 			time.Sleep(delayBetweenAngle)
 		}

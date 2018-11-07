@@ -10,9 +10,9 @@ import (
 	"github.com/alvarowolfx/golang-voice-iot/mearm"
 	"github.com/alvarowolfx/golang-voice-iot/middleware"
 
-	"github.com/alvarowolfx/golang-voice-iot/pca9685"
 	"periph.io/x/periph/conn/i2c/i2creg"
-
+	"periph.io/x/periph/conn/physic"
+	"periph.io/x/periph/experimental/devices/pca9685"
 	"periph.io/x/periph/host"
 )
 
@@ -27,12 +27,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pca, err := pca9685.NewI2C(bus)
+	pca, err := pca9685.NewI2C(bus, pca9685.I2CAddr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	pca.SetPwmFreq(50)
+	pca.SetPwmFreq(50 * physic.Hertz)
 	pca.SetAllPwm(0, 0)
 	servos := pca9685.NewServoGroup(pca, 50, 650, 0, 180)
 
